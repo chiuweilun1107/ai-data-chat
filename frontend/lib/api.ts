@@ -11,7 +11,8 @@ import type {
   DBSchema,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Use relative path to leverage Next.js rewrite proxy (avoids CORS issues)
+const API_BASE = "";
 
 // ── Generic Fetch Wrapper ────────────────────────────────
 
@@ -188,6 +189,7 @@ export async function sendChatMessage(
 
   // Auto-create panel if chart was generated
   let panelId = "";
+  console.log("[sendChatMessage] chartJson:", !!chartJson, "sql:", !!raw.sql, "chart_json type:", typeof raw.chart_json, "chart_json len:", typeof raw.chart_json === "string" ? (raw.chart_json as string).length : 0);
   if (chartJson && raw.sql) {
     try {
       const panel = await createPanel(projectId, {
@@ -197,8 +199,8 @@ export async function sendChatMessage(
         chart_json: chartJson,
       } as Partial<Panel>);
       panelId = String(panel.id);
-    } catch {
-      // Panel creation failed, still return chat result
+    } catch (err) {
+      console.error("[sendChatMessage] Panel creation failed:", err);
     }
   }
 

@@ -18,7 +18,7 @@ AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-0
 MAX_TOKENS: int = 4096
 
 # SQL Safety
-SQL_TIMEOUT_SECONDS: int = 10
+SQL_TIMEOUT_SECONDS: int = 30
 MAX_ROWS: int = 10000
 
 # Default schemas to expose to AI

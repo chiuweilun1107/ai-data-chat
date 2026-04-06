@@ -190,7 +190,7 @@ export default function ChatPanel({
 
   const handleTemplateSelect = (template: Template) => {
     setActiveTemplate(template);
-    setInput(template.name + ": " + template.style_description);
+    setInput("");
     inputRef.current?.focus();
   };
 

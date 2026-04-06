@@ -57,15 +57,16 @@ def build_system_prompt(schema_info: str) -> str:
 
 {schema_info}
 
-## 規則
+## SQL 規則
 
 1. 只能生成 SELECT 查詢，禁止任何寫入操作
 2. 必須使用 schema 前綴（如 public.candles, alice.portfolio_holdings）
 3. 加上合理的 LIMIT（預設 100）避免返回過多資料
 4. 日期欄位用 trade_date、ts、signal_date 等，注意各表的欄位名稱不同
-5. 圖表標題和標籤用繁體中文
-6. 圖表要美觀、資訊清晰，選擇最適合資料的圖表類型
-7. 如果用戶問的東西無法從現有資料表回答，請說明原因
+5. 如果用戶問的東西無法從現有資料表回答，請說明原因
+6. symbol 欄位是股票代號（如 '2330'），是文字型別，不是數字
+7. 查詢股票時，一定要同時 SELECT name（股票名稱），用 name 作為圖表的顯示標籤
+8. 用戶說「前 N 名」時，SQL 必須用 ORDER BY + LIMIT N 確保返回正確數量
 
 ## 圖表程式碼規範
 
@@ -73,6 +74,11 @@ def build_system_prompt(schema_info: str) -> str:
 - 最終圖表必須賦值給 `fig` 變數
 - 可用：plotly.express as px, plotly.graph_objects as go, pandas as pd
 - 不可 import 其他模組
+- 圖表標題和標籤用繁體中文
+- X 軸如果是股票代號或名稱，必須轉成字串型別（`df['symbol'].astype(str)`），避免被當成連續數值
+- 優先用股票名稱（name）作為 X 軸標籤，而非代號（symbol）
+- 圖表要美觀、資訊清晰，選擇最適合資料的圖表類型
+- 長條圖超過 5 個項目時，X 軸標籤旋轉 45 度
 
 請使用 generate_analysis 工具來回應。"""
 

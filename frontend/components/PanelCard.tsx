@@ -166,7 +166,7 @@ export default function PanelCard({
     <div
       ref={containerRef}
       className={`
-        bg-surface-card rounded-card overflow-hidden relative group
+        bg-surface-card rounded-card relative group
         ${fullscreen ? "fixed inset-4 z-50 shadow-2xl" : ""}
       `}
       onMouseEnter={() => setHovered(true)}
@@ -250,7 +250,7 @@ export default function PanelCard({
       </div>
 
       {/* Chart — responsive height */}
-      <div ref={chartRef} className="px-2 pb-2" style={{ height: fullscreen ? "calc(100% - 48px)" : "clamp(200px, 30vw, 400px)" }}>
+      <div ref={chartRef} className="px-2 pb-2 overflow-hidden rounded-b-card" style={{ height: fullscreen ? "calc(100% - 48px)" : "clamp(200px, 30vw, 400px)" }}>
         <Suspense
           fallback={
             <div className="w-full h-full flex items-center justify-center">
