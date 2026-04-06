@@ -20,6 +20,8 @@ interface DashboardProps {
   onRefreshAll?: () => void;
   onEditPanel?: (panel: Panel) => void;
   onSaveAsTemplate?: (panel: Panel) => void;
+  onImportPanels?: () => void;
+  onCopiedToProject?: () => void;
 }
 
 export default function Dashboard({
@@ -30,6 +32,8 @@ export default function Dashboard({
   onRefreshAll,
   onEditPanel,
   onSaveAsTemplate,
+  onImportPanels,
+  onCopiedToProject,
 }: DashboardProps) {
   const [autoInterval, setAutoInterval] = useState(0);
   const [countdown, setCountdown] = useState(0);
@@ -145,8 +149,27 @@ export default function Dashboard({
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      {/* Refresh toolbar */}
+      {/* Toolbar */}
       <div className="flex items-center justify-end gap-3 mb-4">
+        {/* Add Panel (import) button */}
+        {onImportPanels && (
+          <button
+            onClick={onImportPanels}
+            className="
+              flex items-center gap-1.5 px-3 py-1.5 rounded-md
+              text-[11px] text-text-secondary
+              border border-surface-border
+              hover:bg-surface-hover hover:text-text-primary
+              transition-colors mr-auto
+            "
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+            Add Panel
+          </button>
+        )}
+
         {/* Auto refresh selector */}
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] text-text-hint">Auto refresh</span>
@@ -207,6 +230,7 @@ export default function Dashboard({
             onRefresh={onRefreshPanel}
             onEdit={onEditPanel}
             onSaveAsTemplate={onSaveAsTemplate}
+            onCopiedToProject={onCopiedToProject}
           />
         ))}
       </div>

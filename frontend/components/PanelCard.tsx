@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useMemo, lazy, Suspense } fro
 import type { Panel } from "@/lib/types";
 import { updatePanel as apiUpdatePanel } from "@/lib/api";
 import { useTheme } from "@/hooks/useTheme";
+import CopyToProjectMenu from "./CopyToProjectMenu";
 
 const Plot = lazy(() => import("react-plotly.js"));
 
@@ -29,6 +30,7 @@ interface PanelCardProps {
   onRefresh?: (panelId: string) => void;
   onEdit?: (panel: Panel) => void;
   onSaveAsTemplate?: (panel: Panel) => void;
+  onCopiedToProject?: () => void;
 }
 
 export default function PanelCard({
@@ -37,12 +39,15 @@ export default function PanelCard({
   onRefresh,
   onEdit,
   onSaveAsTemplate,
+  onCopiedToProject,
 }: PanelCardProps) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [copyMenuOpen, setCopyMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const copyBtnRef = useRef<HTMLButtonElement>(null);
   const [chartSettings, setChartSettings] = useState<ChartSettings>(() => {
     if (panel.settings) {
       try {
@@ -170,7 +175,7 @@ export default function PanelCard({
         ${fullscreen ? "fixed inset-4 z-50 shadow-2xl" : ""}
       `}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
+      onMouseLeave={() => { setHovered(false); setMenuOpen(false); setCopyMenuOpen(false); }}
     >
       {fullscreen && (
         <div className="fixed inset-0 bg-black/60 -z-10" onClick={handleFullscreen} />
@@ -239,6 +244,32 @@ export default function PanelCard({
                   Save as template
                 </button>
               )}
+              {/* Copy to project */}
+              <div className="relative">
+                <button
+                  ref={copyBtnRef}
+                  onClick={() => setCopyMenuOpen((prev) => !prev)}
+                  className="w-full px-3 py-2 text-left text-xs text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors flex items-center gap-2"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <rect x="3.5" y="3.5" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1" />
+                    <path d="M8.5 3.5V2.5a1 1 0 00-1-1h-5a1 1 0 00-1 1v5a1 1 0 001 1h1" stroke="currentColor" strokeWidth="1" />
+                  </svg>
+                  Copy to project
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="ml-auto">
+                    <path d="M3 1.5l3 2.5-3 2.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                {copyMenuOpen && (
+                  <CopyToProjectMenu
+                    panelId={Number(panel.id)}
+                    currentProjectId={panel.project_id}
+                    anchorRef={copyBtnRef}
+                    onClose={() => setCopyMenuOpen(false)}
+                    onCopied={onCopiedToProject}
+                  />
+                )}
+              </div>
               <div className="border-t border-surface-border my-1" />
               <button onClick={handleDelete} disabled={deleting} className="w-full px-3 py-2 text-left text-xs text-danger hover:bg-danger/10 transition-colors flex items-center gap-2 disabled:opacity-50">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M4.5 3V2a1 1 0 011-1h1a1 1 0 011 1v1M5 5.5v3M7 5.5v3M3 3l.5 7a1 1 0 001 1h3a1 1 0 001-1L9 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" /></svg>

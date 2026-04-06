@@ -11,6 +11,7 @@ import FloatingChat from "@/components/FloatingChat";
 import PanelEditChat from "@/components/PanelEditChat";
 import NewProjectModal from "@/components/NewProjectModal";
 import SaveTemplateModal from "@/components/SaveTemplateModal";
+import ImportPanelsModal from "@/components/ImportPanelsModal";
 
 export default function Home() {
   const {
@@ -29,9 +30,11 @@ export default function Home() {
     addPanel,
     updatePanel,
     removePanel,
+    refresh: refreshPanels,
   } = usePanels(activeProject?.id ?? null);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingPanel, setEditingPanel] = useState<Panel | null>(null);
   const [savingTemplate, setSavingTemplate] = useState<Panel | null>(null);
 
@@ -124,6 +127,10 @@ export default function Home() {
           onRefreshAll={handleRefreshAll}
           onEditPanel={(panel: Panel) => setEditingPanel(panel)}
           onSaveAsTemplate={(panel: Panel) => setSavingTemplate(panel)}
+          onImportPanels={() => setImportModalOpen(true)}
+          onCopiedToProject={() => {
+            // No-op: the copy goes to another project, no need to refresh current
+          }}
         />
       </div>
 
@@ -163,6 +170,14 @@ export default function Home() {
           onSaved={() => setSavingTemplate(null)}
         />
       )}
+
+      {/* Import Panels Modal */}
+      <ImportPanelsModal
+        open={importModalOpen}
+        currentProjectId={activeProject?.id ?? ""}
+        onClose={() => setImportModalOpen(false)}
+        onImported={() => refreshPanels()}
+      />
     </main>
   );
 }

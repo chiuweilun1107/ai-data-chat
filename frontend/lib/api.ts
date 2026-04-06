@@ -164,6 +164,38 @@ export async function refreshPanel(panelId: string): Promise<Panel> {
   } as Panel;
 }
 
+// ── Panel Import (cross-project) ────────────────────────
+
+export interface ProjectPanelGroup {
+  project_id: number;
+  project_name: string;
+  panels: {
+    id: number;
+    title: string;
+    sql: string;
+    chart_code: string;
+    chart_json: string;
+    settings: string;
+  }[];
+}
+
+export async function fetchAllPanels(): Promise<ProjectPanelGroup[]> {
+  return request<ProjectPanelGroup[]>("/api/panels/all");
+}
+
+export async function importPanels(
+  targetProjectId: string,
+  panelIds: number[]
+): Promise<{ imported: number }> {
+  return request<{ imported: number }>(
+    `/api/projects/${targetProjectId}/panels/import`,
+    {
+      method: "POST",
+      body: JSON.stringify({ panel_ids: panelIds }),
+    }
+  );
+}
+
 // ── Chat ─────────────────────────────────────────────────
 
 export async function sendChatMessage(

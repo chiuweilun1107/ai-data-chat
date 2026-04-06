@@ -4,7 +4,7 @@ Panel CRUD + refresh (re-execute SQL).
 
 from fastapi import APIRouter, HTTPException
 from database import get_db
-from models import PanelCreate, PanelUpdate, PanelResponse
+from models import PanelCreate, PanelUpdate, PanelResponse, PanelImport
 from core.db import get_connection
 from core.sql_executor import safe_execute
 from core.chart_generator import execute_chart_code, ChartExecutionError
@@ -92,6 +92,35 @@ def create_panel(project_id: int, body: PanelCreate):
         return _row_to_panel(row)
 
 
+@router.get("/api/panels/all")
+def list_all_panels():
+    """List all panels grouped by project (for cross-project import)."""
+    with get_db() as conn:
+        projects = conn.execute("SELECT id, name FROM projects ORDER BY name").fetchall()
+        result = []
+        for proj in projects:
+            panels = conn.execute(
+                "SELECT * FROM panels WHERE project_id = ? ORDER BY position_y, position_x",
+                (proj["id"],),
+            ).fetchall()
+            result.append({
+                "project_id": proj["id"],
+                "project_name": proj["name"],
+                "panels": [
+                    {
+                        "id": p["id"],
+                        "title": p["title"],
+                        "sql": p["sql"],
+                        "chart_code": p["chart_code"],
+                        "chart_json": p["chart_json"],
+                        "settings": p["settings"] if "settings" in p.keys() else "",
+                    }
+                    for p in panels
+                ],
+            })
+        return result
+
+
 @router.put("/api/panels/{panel_id}", response_model=PanelResponse)
 def update_panel(panel_id: int, body: PanelUpdate):
     """Update panel fields (title, position, size, etc.)."""
@@ -122,6 +151,54 @@ def delete_panel(panel_id: int):
     with get_db() as conn:
         _get_panel_or_404(conn, panel_id)
         conn.execute("DELETE FROM panels WHERE id = ?", (panel_id,))
+
+
+@router.post("/api/projects/{project_id}/panels/import")
+def import_panels(project_id: int, body: PanelImport):
+    """Import (copy) panels from other projects into the target project."""
+    with get_db() as conn:
+        _get_project_or_404(conn, project_id)
+
+        # Fetch all source panels
+        placeholders = ",".join("?" for _ in body.panel_ids)
+        source_panels = conn.execute(
+            f"SELECT * FROM panels WHERE id IN ({placeholders})",
+            body.panel_ids,
+        ).fetchall()
+
+        if not source_panels:
+            raise HTTPException(status_code=404, detail="No panels found for given IDs")
+
+        # Find max position_y in target project for stacking
+        max_y_row = conn.execute(
+            "SELECT COALESCE(MAX(position_y), -1) as max_y FROM panels WHERE project_id = ?",
+            (project_id,),
+        ).fetchone()
+        next_y = (max_y_row["max_y"] + 1) if max_y_row else 0
+
+        imported = 0
+        for panel in source_panels:
+            conn.execute(
+                """INSERT INTO panels (project_id, title, sql, chart_code, chart_json,
+                                       position_x, position_y, width, height, settings)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    project_id,
+                    panel["title"],
+                    panel["sql"],
+                    panel["chart_code"],
+                    panel["chart_json"],
+                    0,
+                    next_y,
+                    panel["width"],
+                    panel["height"],
+                    panel["settings"] if "settings" in panel.keys() else "",
+                ),
+            )
+            next_y += 1
+            imported += 1
+
+        return {"imported": imported}
 
 
 @router.post("/api/panels/{panel_id}/refresh", response_model=PanelResponse)

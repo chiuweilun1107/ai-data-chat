@@ -139,6 +139,12 @@ class TemplateResponse(BaseModel):
     created_at: str
 
 
+# ─── Panel Import ─────────────────────────────────────────
+
+class PanelImport(BaseModel):
+    panel_ids: list[int] = Field(..., min_length=1)
+
+
 # ─── Common ────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):
