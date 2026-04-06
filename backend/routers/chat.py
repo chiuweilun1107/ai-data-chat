@@ -70,35 +70,39 @@ def send_chat(project_id: int, body: ChatRequest):
                     "sample_chart_code": tmpl_row["sample_chart_code"],
                 }
 
-        # Save user message
-        conn.execute(
-            """INSERT INTO chat_messages (project_id, role, content)
-               VALUES (?, 'user', ?)""",
-            (project_id, body.message),
-        )
+        # Save user message (skip for edit mode)
+        if not body.is_edit:
+            conn.execute(
+                """INSERT INTO chat_messages (project_id, role, content)
+                   VALUES (?, 'user', ?)""",
+                (project_id, body.message),
+            )
 
     # Run analysis (outside SQLite transaction since it calls external DB + LLM)
+    schema_notes = project["schema_notes"] if "schema_notes" in project.keys() else ""
     result = run_analysis(
         db_config=conn_params,
         user_message=body.message,
         chat_history=chat_history,
         template=template,
+        schema_notes=schema_notes,
     )
 
-    # Save assistant response
-    assistant_content = result.explanation or result.text_response
-    with get_db() as conn:
-        conn.execute(
-            """INSERT INTO chat_messages (project_id, role, content, sql, chart_code, chart_json)
-               VALUES (?, 'assistant', ?, ?, ?, ?)""",
-            (
-                project_id,
-                assistant_content,
-                result.sql,
-                result.chart_code,
-                result.chart_json,
-            ),
-        )
+    # Save assistant response (skip for edit mode)
+    if not body.is_edit:
+        assistant_content = result.explanation or result.text_response
+        with get_db() as conn:
+            conn.execute(
+                """INSERT INTO chat_messages (project_id, role, content, sql, chart_code, chart_json)
+                   VALUES (?, 'assistant', ?, ?, ?, ?)""",
+                (
+                    project_id,
+                    assistant_content,
+                    result.sql,
+                    result.chart_code,
+                    result.chart_json,
+                ),
+            )
 
     return ChatResponse(
         explanation=result.explanation,

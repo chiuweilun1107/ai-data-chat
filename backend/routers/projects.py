@@ -61,9 +61,9 @@ def create_project(body: ProjectCreate):
     """Create a new project with DB connection info."""
     with get_db() as conn:
         cursor = conn.execute(
-            """INSERT INTO projects (name, db_host, db_port, db_user, db_password, db_name)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (body.name, body.db_host, body.db_port, body.db_user, body.db_password, body.db_name),
+            """INSERT INTO projects (name, db_type, db_host, db_port, db_user, db_password, db_name, schema_notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (body.name, body.db_type, body.db_host, body.db_port, body.db_user, body.db_password, body.db_name, body.schema_notes),
         )
         project_id = cursor.lastrowid
         row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
@@ -131,6 +131,20 @@ def update_project(project_id: int, body: ProjectUpdate):
             db_name=row["db_name"],
             created_at=row["created_at"],
         )
+
+
+@router.post("/test-connection", response_model=TestConnectionResponse)
+def test_connection_direct(payload: ProjectCreate):
+    """Test DB connection before creating a project."""
+    conn_params = {
+        "host": payload.db_host,
+        "port": payload.db_port,
+        "user": payload.db_user,
+        "password": payload.db_password,
+        "dbname": payload.db_name,
+    }
+    success, message = test_connection(conn_params)
+    return TestConnectionResponse(success=success, message=message)
 
 
 @router.delete("/{project_id}", status_code=204)

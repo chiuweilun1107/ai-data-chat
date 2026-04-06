@@ -39,6 +39,7 @@ def _row_to_panel(row) -> PanelResponse:
         position_y=row["position_y"],
         width=row["width"],
         height=row["height"],
+        settings=row["settings"] if "settings" in row.keys() else "",
         created_at=row["created_at"],
     )
 
@@ -72,8 +73,8 @@ def create_panel(project_id: int, body: PanelCreate):
         _get_project_or_404(conn, project_id)
         cursor = conn.execute(
             """INSERT INTO panels (project_id, title, sql, chart_code, chart_json,
-                                   position_x, position_y, width, height)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                   position_x, position_y, width, height, settings)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 project_id,
                 body.title,
@@ -84,6 +85,7 @@ def create_panel(project_id: int, body: PanelCreate):
                 body.position_y,
                 body.width,
                 body.height,
+                body.settings,
             ),
         )
         row = conn.execute("SELECT * FROM panels WHERE id = ?", (cursor.lastrowid,)).fetchone()
@@ -98,7 +100,7 @@ def update_panel(panel_id: int, body: PanelUpdate):
 
         updates = {}
         for field_name in ("title", "sql", "chart_code", "chart_json",
-                           "position_x", "position_y", "width", "height"):
+                           "position_x", "position_y", "width", "height", "settings"):
             value = getattr(body, field_name)
             if value is not None:
                 updates[field_name] = value

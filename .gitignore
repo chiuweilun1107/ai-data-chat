@@ -19,3 +19,6 @@ out/
 
 # OS
 .DS_Store
+*.db-shm
+*.db-wal
+tsconfig.tsbuildinfo

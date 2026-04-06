@@ -10,11 +10,13 @@ from pydantic import BaseModel, Field
 
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
+    db_type: str = Field(default="postgresql")
     db_host: str = Field(..., min_length=1)
     db_port: int = Field(default=5432, ge=1, le=65535)
     db_user: str = Field(..., min_length=1)
     db_password: str = Field(..., min_length=1)
     db_name: str = Field(..., min_length=1)
+    schema_notes: str = Field(default="")
 
 
 class ProjectUpdate(BaseModel):
@@ -24,15 +26,18 @@ class ProjectUpdate(BaseModel):
     db_user: str | None = None
     db_password: str | None = None
     db_name: str | None = None
+    schema_notes: str | None = None
 
 
 class ProjectResponse(BaseModel):
     id: int
     name: str
+    db_type: str = "postgresql"
     db_host: str
     db_port: int
     db_user: str
     db_name: str
+    schema_notes: str = ""
     created_at: str
 
     class Config:
@@ -55,6 +60,7 @@ class PanelCreate(BaseModel):
     position_y: int = Field(default=0, ge=0)
     width: int = Field(default=6, ge=1, le=12)
     height: int = Field(default=4, ge=1, le=20)
+    settings: str = Field(default="")
 
 
 class PanelUpdate(BaseModel):
@@ -66,6 +72,7 @@ class PanelUpdate(BaseModel):
     position_y: int | None = Field(None, ge=0)
     width: int | None = Field(None, ge=1, le=12)
     height: int | None = Field(None, ge=1, le=20)
+    settings: str | None = None
 
 
 class PanelResponse(BaseModel):
@@ -79,6 +86,7 @@ class PanelResponse(BaseModel):
     position_y: int
     width: int
     height: int
+    settings: str = ""
     created_at: str
 
 
@@ -87,6 +95,7 @@ class PanelResponse(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
     template_id: int | None = None
+    is_edit: bool = False
 
 
 class ChatMessageResponse(BaseModel):

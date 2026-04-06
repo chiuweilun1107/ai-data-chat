@@ -37,6 +37,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
+                db_type TEXT NOT NULL DEFAULT 'postgresql',
                 db_host TEXT NOT NULL,
                 db_port INTEGER NOT NULL DEFAULT 5432,
                 db_user TEXT NOT NULL,
@@ -85,3 +86,13 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_panels_project ON panels(project_id);
             CREATE INDEX IF NOT EXISTS idx_chat_messages_project ON chat_messages(project_id);
         """)
+
+        # Migrate: add settings column to panels if not exists
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(panels)").fetchall()]
+        if "settings" not in cols:
+            conn.execute("ALTER TABLE panels ADD COLUMN settings TEXT NOT NULL DEFAULT ''")
+
+        # Migrate: add schema_notes column to projects if not exists
+        proj_cols = [row[1] for row in conn.execute("PRAGMA table_info(projects)").fetchall()]
+        if "schema_notes" not in proj_cols:
+            conn.execute("ALTER TABLE projects ADD COLUMN schema_notes TEXT NOT NULL DEFAULT ''")

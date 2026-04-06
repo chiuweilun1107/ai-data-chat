@@ -81,7 +81,21 @@ def get_schema_info(conn_params: dict, schemas: list[str] | None = None) -> str:
         for schema, table in tables:
             count = row_counts.get((schema, table), 0)
             cols_text = "\n".join(col_map.get((schema, table), []))
-            lines.append(f"{schema}.{table} ({count:,} rows):\n{cols_text}")
+
+            # Get sample data (3 rows) for non-empty tables
+            sample_text = ""
+            if count > 0:
+                try:
+                    cur.execute(f"SELECT * FROM {schema}.{table} LIMIT 3")
+                    sample_cols = [desc[0] for desc in cur.description]
+                    sample_rows = cur.fetchall()
+                    if sample_rows:
+                        sample_lines = [f"    {dict(zip(sample_cols, row))}" for row in sample_rows]
+                        sample_text = f"\n  Sample data:\n" + "\n".join(sample_lines)
+                except Exception:
+                    pass
+
+            lines.append(f"{schema}.{table} ({count:,} rows):\n{cols_text}{sample_text}")
 
         return "\n\n".join(lines)
     finally:

@@ -47,12 +47,15 @@ export interface Panel {
   id: string;
   project_id: string;
   title: string;
-  chart_type: string;
-  chart_json: PlotlyData;
   sql: string;
-  order: number;
+  chart_code: string;
+  chart_json: PlotlyData;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  settings?: string; // JSON string of chart settings
   created_at: string;
-  updated_at: string;
 }
 
 // ── Chat ─────────────────────────────────────────────────
@@ -62,14 +65,15 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   sql?: string;
+  chart_code?: string;
   chart_json?: PlotlyData;
-  panel_id?: string;
   created_at: string;
 }
 
 export interface ChatRequest {
   message: string;
   template_id?: string;
+  is_edit?: boolean;
 }
 
 export interface ChatResponse {
@@ -86,9 +90,10 @@ export interface ChatResponse {
 export interface Template {
   id: string;
   name: string;
-  description: string;
-  prompt: string;
-  category: string;
+  chart_type: string;
+  style_description: string;
+  sample_chart_code: string;
+  is_builtin: boolean;
 }
 
 // ── DB Schema ────────────────────────────────────────────

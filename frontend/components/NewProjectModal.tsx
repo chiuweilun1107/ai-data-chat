@@ -28,13 +28,13 @@ interface FormState {
 }
 
 const initialForm: FormState = {
-  name: "",
+  name: "Stock Analytics",
   db_type: "postgresql",
-  db_host: "localhost",
-  db_port: "5432",
-  db_name: "",
-  db_user: "",
-  db_password: "",
+  db_host: "100.96.229.13",
+  db_port: "54322",
+  db_name: "postgres",
+  db_user: "postgres",
+  db_password: "postgres",
 };
 
 export default function NewProjectModal({

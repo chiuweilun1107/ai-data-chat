@@ -2,6 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme CSS Variables ─────────────────────────────────── */
+
+:root {
+  /* Light theme (default) */
+  --surface-primary: #ffffff;
+  --surface-sidebar: #f9fafb;
+  --surface-card: #f3f4f6;
+  --surface-hover: #e5e7eb;
+  --surface-input: #f9fafb;
+  --surface-border: #e5e7eb;
+  --text-primary: #000000;
+  --text-secondary: #1f2937;
+  --text-hint: #6b7280;
+  --accent: #10a37f;
+  --accent-hover: #0d8c6d;
+  --danger: #ef4444;
+
+  /* Scrollbar light */
+  --scrollbar-thumb: #c4c4c4;
+  --scrollbar-thumb-hover: #a3a3a3;
+
+  /* Plotly light */
+  --plotly-font-color: #000000;
+  --plotly-grid-color: #e5e7eb;
+  --plotly-modebar-icon: #9ca3af;
+  --plotly-modebar-icon-hover: #374151;
+}
+
+:root.dark {
+  /* Dark theme */
+  --surface-primary: #212121;
+  --surface-sidebar: #171717;
+  --surface-card: #2a2a2a;
+  --surface-hover: #333333;
+  --surface-input: #2f2f2f;
+  --surface-border: #3e3e3e;
+  --text-primary: #ececec;
+  --text-secondary: #b4b4b4;
+  --text-hint: #666666;
+  --accent: #10a37f;
+  --accent-hover: #0d8c6d;
+  --danger: #ef4444;
+
+  /* Scrollbar dark */
+  --scrollbar-thumb: #444;
+  --scrollbar-thumb-hover: #555;
+
+  /* Plotly dark */
+  --plotly-font-color: #ececec;
+  --plotly-grid-color: #3a3a3a;
+  --plotly-modebar-icon: #999;
+  --plotly-modebar-icon-hover: #ececec;
+}
+
 /* ── Base ─────────────────────────────────────────────── */
 
 * {
@@ -14,8 +68,9 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background-color: #212121;
-  color: #ececec;
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ── Scrollbar ────────────────────────────────────────── */
@@ -29,18 +84,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #444;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 /* ── Typing animation ────────────────────────────────── */
@@ -77,7 +132,7 @@ body {
   backdrop-filter: blur(4px);
 }
 
-/* ── Plotly overrides for dark theme ──────────────────── */
+/* ── Plotly overrides ─────────────────────────────────── */
 
 .js-plotly-plot .plotly .modebar {
   right: 4px !important;
@@ -85,11 +140,11 @@ body {
 }
 
 .js-plotly-plot .plotly .modebar-btn path {
-  fill: #999 !important;
+  fill: var(--plotly-modebar-icon) !important;
 }
 
 .js-plotly-plot .plotly .modebar-btn:hover path {
-  fill: #ececec !important;
+  fill: var(--plotly-modebar-icon-hover) !important;
 }
 
 /* ── Transitions ──────────────────────────────────────── */
@@ -106,5 +161,22 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ── Slide up for floating chat ─────────────────────── */
+
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

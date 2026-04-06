@@ -49,6 +49,7 @@ def run_analysis(
     chat_history: list[dict] | None = None,
     template: dict | None = None,
     schemas: list[str] | None = None,
+    schema_notes: str = "",
     max_retries: int = 2,
 ) -> AnalysisResult:
     """
@@ -69,6 +70,8 @@ def run_analysis(
         schemas = DEFAULT_DB_SCHEMAS
 
     schema_info = get_schema_info(db_config, schemas)
+    if schema_notes:
+        schema_info += f"\n\n## 資料庫使用說明（由用戶提供）\n{schema_notes}"
     result = AnalysisResult()
     history = build_history_from_messages(chat_history or [])
 

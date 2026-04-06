@@ -30,10 +30,10 @@ export default function TemplateSelector({
 
   if (loading || templates.length === 0) return null;
 
-  // Group templates by category
+  // Group templates by chart_type
   const grouped = templates.reduce<Record<string, Template[]>>(
     (acc, template) => {
-      const cat = template.category || "General";
+      const cat = template.chart_type || "General";
       if (!acc[cat]) acc[cat] = [];
       acc[cat].push(template);
       return acc;
@@ -105,9 +105,9 @@ export default function TemplateSelector({
                     <div className="text-xs text-text-primary">
                       {template.name}
                     </div>
-                    {template.description && (
+                    {template.style_description && (
                       <div className="text-[10px] text-text-hint mt-0.5 truncate">
-                        {template.description}
+                        {template.style_description}
                       </div>
                     )}
                   </button>
