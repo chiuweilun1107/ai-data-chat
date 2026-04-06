@@ -1,7 +1,21 @@
+# Environment
 .env
+.env.local
+
+# Python
 __pycache__/
 *.pyc
 .venv/
 venv/
-templates/saved/*.json
-.streamlit/secrets.toml
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+out/
+
+# SQLite
+*.db
+
+# OS
+.DS_Store

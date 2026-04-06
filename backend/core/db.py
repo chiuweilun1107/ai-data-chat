@@ -1,24 +1,47 @@
+"""
+PostgreSQL connection & schema extraction.
+Refactored: accepts conn_params dict instead of reading global config.
+
+conn_params format:
+    {"host": str, "port": int, "user": str, "password": str, "dbname": str}
+"""
+
 import psycopg2
 import pandas as pd
-from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SCHEMAS
 
 
-def get_connection():
+def get_connection(conn_params: dict):
+    """Create a PostgreSQL connection from the given parameters."""
     return psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        dbname=DB_NAME,
+        host=conn_params["host"],
+        port=conn_params["port"],
+        user=conn_params["user"],
+        password=conn_params["password"],
+        dbname=conn_params["dbname"],
     )
 
 
-def get_schema_info() -> str:
+def test_connection(conn_params: dict) -> tuple[bool, str]:
+    """Test if we can connect to the database. Returns (success, message)."""
+    try:
+        conn = get_connection(conn_params)
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        conn.close()
+        return True, "連線成功"
+    except Exception as e:
+        return False, f"連線失敗: {e}"
+
+
+def get_schema_info(conn_params: dict, schemas: list[str] | None = None) -> str:
     """Fetch all table schemas from DB and return as formatted string for LLM prompt."""
-    conn = get_connection()
+    if schemas is None:
+        schemas = ["public"]
+
+    conn = get_connection(conn_params)
     try:
         cur = conn.cursor()
-        schema_list = ",".join(f"'{s}'" for s in DB_SCHEMAS)
+        schema_list = ",".join(f"'{s}'" for s in schemas)
 
         # Get tables
         cur.execute(f"""
@@ -65,9 +88,9 @@ def get_schema_info() -> str:
         conn.close()
 
 
-def execute_query(sql: str, timeout_seconds: int = 10) -> pd.DataFrame:
+def execute_query(conn_params: dict, sql: str, timeout_seconds: int = 10) -> pd.DataFrame:
     """Execute a read-only SQL query and return results as DataFrame."""
-    conn = get_connection()
+    conn = get_connection(conn_params)
     try:
         conn.set_session(readonly=True)
         cur = conn.cursor()

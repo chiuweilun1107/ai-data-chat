@@ -1,3 +1,7 @@
+"""
+Azure OpenAI LLM integration — tool_use for structured analysis output.
+"""
+
 import json
 from openai import AzureOpenAI
 from config import (
@@ -82,7 +86,6 @@ def ask_llm(
     """
     Send user question to Azure OpenAI and get structured analysis response.
     Returns dict with keys: explanation, sql, chart_code, text_response
-    If template is provided, AI will match the template's visualization style.
     """
     messages = [{"role": "system", "content": build_system_prompt(schema_info)}]
 

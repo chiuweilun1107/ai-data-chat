@@ -1,3 +1,8 @@
+"""
+SQL validation & safe execution.
+Refactored: accepts conn_params dict.
+"""
+
 import re
 import pandas as pd
 from core.db import execute_query
@@ -30,7 +35,7 @@ def validate_sql(sql: str) -> str:
     return cleaned
 
 
-def safe_execute(sql: str) -> pd.DataFrame:
+def safe_execute(conn_params: dict, sql: str) -> pd.DataFrame:
     """Validate and execute SQL, returning results as DataFrame."""
     cleaned_sql = validate_sql(sql)
 
@@ -38,4 +43,4 @@ def safe_execute(sql: str) -> pd.DataFrame:
     if "LIMIT" not in cleaned_sql.upper():
         cleaned_sql += f" LIMIT {MAX_ROWS}"
 
-    return execute_query(cleaned_sql, timeout_seconds=SQL_TIMEOUT_SECONDS)
+    return execute_query(conn_params, cleaned_sql, timeout_seconds=SQL_TIMEOUT_SECONDS)

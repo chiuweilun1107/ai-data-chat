@@ -1,3 +1,8 @@
+"""
+Plotly chart code sandbox execution.
+Refactored: returns fig.to_json() string instead of Figure object.
+"""
+
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -8,19 +13,20 @@ class ChartExecutionError(Exception):
 
 
 def _strip_imports(code: str) -> str:
-    """Remove import lines — modules are pre-injected into namespace."""
+    """Remove import lines -- modules are pre-injected into namespace."""
     lines = code.split("\n")
     return "\n".join(line for line in lines if not line.strip().startswith(("import ", "from ")))
 
 
-def execute_chart_code(code: str, df: pd.DataFrame) -> go.Figure:
+def execute_chart_code(code: str, df: pd.DataFrame) -> str:
     """
     Execute AI-generated Plotly code in a restricted namespace.
     The code must create a variable named `fig`.
+    Returns: fig.to_json() string for frontend rendering with Plotly.js.
     """
     cleaned_code = _strip_imports(code)
 
-    # Restricted namespace — only allow plotly, pandas, and safe builtins
+    # Restricted namespace -- only allow plotly, pandas, and safe builtins
     safe_builtins = {
         k: __builtins__[k] if isinstance(__builtins__, dict) else getattr(__builtins__, k)
         for k in ("range", "len", "list", "dict", "tuple", "zip", "enumerate",
@@ -49,7 +55,7 @@ def execute_chart_code(code: str, df: pd.DataFrame) -> go.Figure:
     if not isinstance(fig, go.Figure):
         raise ChartExecutionError(f"fig 不是 Plotly Figure，而是 {type(fig)}")
 
-    # ChatGPT-style dark chart theme
+    # Dark chart theme
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -64,4 +70,4 @@ def execute_chart_code(code: str, df: pd.DataFrame) -> go.Figure:
                    "#06b6d4", "#ec4899", "#22c55e", "#f97316", "#6366f1"],
     )
 
-    return fig
+    return fig.to_json()
