@@ -100,16 +100,25 @@ def ask_llm(
 
     # If template is selected, inject style reference
     if template:
-        user_message = (
-            f"{user_message}\n\n"
-            f"---\n"
-            f"請使用以下視覺化範本的風格來呈現：\n"
-            f"範本名稱：{template['name']}\n"
-            f"圖表類型：{template['chart_type']}\n"
-            f"風格描述：{template['style_description']}\n"
-            f"參考程式碼：\n```python\n{template['sample_chart_code']}\n```\n"
-            f"請保持相同的圖表類型、配色、佈局風格，但根據當前資料庫 schema 生成新的 SQL。"
+        template_parts = [
+            f"---",
+            f"請使用以下視覺化範本來呈現：",
+            f"範本名稱：{template['name']}",
+            f"圖表類型：{template['chart_type']}",
+            f"風格描述：{template['style_description']}",
+        ]
+        if template.get('sample_sql'):
+            template_parts.append(
+                f"\n原始 SQL 食譜（參考邏輯，需要改寫欄位名適配當前資料庫）：\n```sql\n{template['sample_sql']}\n```"
+            )
+        if template.get('sample_chart_code'):
+            template_parts.append(
+                f"\n參考繪圖程式碼（保持相同風格）：\n```python\n{template['sample_chart_code']}\n```"
+            )
+        template_parts.append(
+            f"\n請根據當前資料庫 schema，改寫 SQL 中的表名和欄位名以適配新資料庫，保持相同的查詢邏輯（如排序、聚合、LIMIT）和圖表風格。"
         )
+        user_message = f"{user_message}\n\n" + "\n".join(template_parts)
 
     messages.append({"role": "user", "content": user_message})
 

@@ -92,6 +92,7 @@ export interface Template {
   name: string;
   chart_type: string;
   style_description: string;
+  sample_sql: string;
   sample_chart_code: string;
   is_builtin: boolean;
 }

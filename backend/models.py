@@ -126,6 +126,7 @@ class TemplateCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     chart_type: str = Field(..., min_length=1)
     style_description: str = Field(default="")
+    sample_sql: str = Field(default="")
     sample_chart_code: str = Field(default="")
 
 
@@ -134,6 +135,7 @@ class TemplateResponse(BaseModel):
     name: str
     chart_type: str
     style_description: str
+    sample_sql: str = ""
     sample_chart_code: str
     is_builtin: bool
     created_at: str

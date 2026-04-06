@@ -15,6 +15,7 @@ def _row_to_template(row) -> TemplateResponse:
         name=row["name"],
         chart_type=row["chart_type"],
         style_description=row["style_description"],
+        sample_sql=row["sample_sql"] if "sample_sql" in row.keys() else "",
         sample_chart_code=row["sample_chart_code"],
         is_builtin=bool(row["is_builtin"]),
         created_at=row["created_at"],
@@ -36,9 +37,9 @@ def create_template(body: TemplateCreate):
     """Save a new user-defined template."""
     with get_db() as conn:
         cursor = conn.execute(
-            """INSERT INTO templates (name, chart_type, style_description, sample_chart_code, is_builtin)
-               VALUES (?, ?, ?, ?, 0)""",
-            (body.name, body.chart_type, body.style_description, body.sample_chart_code),
+            """INSERT INTO templates (name, chart_type, style_description, sample_sql, sample_chart_code, is_builtin)
+               VALUES (?, ?, ?, ?, ?, 0)""",
+            (body.name, body.chart_type, body.style_description, body.sample_sql, body.sample_chart_code),
         )
         row = conn.execute("SELECT * FROM templates WHERE id = ?", (cursor.lastrowid,)).fetchone()
         return _row_to_template(row)

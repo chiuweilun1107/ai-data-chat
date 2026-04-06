@@ -66,6 +66,7 @@ def init_db():
                 name TEXT NOT NULL,
                 chart_type TEXT NOT NULL,
                 style_description TEXT NOT NULL DEFAULT '',
+                sample_sql TEXT NOT NULL DEFAULT '',
                 sample_chart_code TEXT NOT NULL DEFAULT '',
                 is_builtin INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -96,3 +97,8 @@ def init_db():
         proj_cols = [row[1] for row in conn.execute("PRAGMA table_info(projects)").fetchall()]
         if "schema_notes" not in proj_cols:
             conn.execute("ALTER TABLE projects ADD COLUMN schema_notes TEXT NOT NULL DEFAULT ''")
+
+        # Migrate: add sample_sql column to templates if not exists
+        tmpl_cols = [row[1] for row in conn.execute("PRAGMA table_info(templates)").fetchall()]
+        if "sample_sql" not in tmpl_cols:
+            conn.execute("ALTER TABLE templates ADD COLUMN sample_sql TEXT NOT NULL DEFAULT ''")

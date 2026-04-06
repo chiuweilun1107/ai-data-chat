@@ -48,6 +48,7 @@ export default function SaveTemplateModal({
         name: name.trim(),
         chart_type: chartType,
         style_description: description.trim() || `${chartType} style from "${panel.title}"`,
+        sample_sql: panel.sql || "",
         sample_chart_code: panel.chart_code || "",
       } as Record<string, unknown>);
       onSaved();

@@ -67,6 +67,7 @@ def send_chat(project_id: int, body: ChatRequest):
                     "name": tmpl_row["name"],
                     "chart_type": tmpl_row["chart_type"],
                     "style_description": tmpl_row["style_description"],
+                    "sample_sql": tmpl_row["sample_sql"] if "sample_sql" in tmpl_row.keys() else "",
                     "sample_chart_code": tmpl_row["sample_chart_code"],
                 }
 
