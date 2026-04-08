@@ -147,6 +147,12 @@ class PanelImport(BaseModel):
     panel_ids: list[int] = Field(..., min_length=1)
 
 
+# ─── Panel Reorder ────────────────────────────────────────
+
+class PanelReorder(BaseModel):
+    panel_ids: list[int] = Field(..., min_length=1)
+
+
 # ─── Common ────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):

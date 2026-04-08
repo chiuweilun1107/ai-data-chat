@@ -122,10 +122,17 @@ export async function createPanel(
       ? JSON.stringify(panel.chart_json)
       : panel.chart_json || "",
   };
-  return request<Panel>(`/api/projects/${projectId}/panels`, {
+  const raw = await request<Record<string, unknown>>(`/api/projects/${projectId}/panels`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  let chartJson: PlotlyData = { data: [], layout: {} };
+  if (raw.chart_json && typeof raw.chart_json === "string") {
+    try { chartJson = JSON.parse(raw.chart_json as string); } catch { /* keep default */ }
+  } else if (raw.chart_json && typeof raw.chart_json === "object") {
+    chartJson = raw.chart_json as PlotlyData;
+  }
+  return { ...raw, id: String(raw.id), project_id: String(raw.project_id), chart_json: chartJson } as Panel;
 }
 
 export async function updatePanel(
@@ -140,6 +147,16 @@ export async function updatePanel(
 
 export async function deletePanel(panelId: string): Promise<void> {
   return request<void>(`/api/panels/${panelId}`, { method: "DELETE" });
+}
+
+export async function reorderPanels(
+  projectId: string,
+  panelIds: string[]
+): Promise<void> {
+  await request<{ ok: boolean }>(`/api/projects/${projectId}/panels/reorder`, {
+    method: "PUT",
+    body: JSON.stringify({ panel_ids: panelIds.map(Number) }),
+  });
 }
 
 export async function refreshPanel(panelId: string): Promise<Panel> {

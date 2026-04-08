@@ -166,7 +166,6 @@ export default function FloatingChat({
         flex flex-col
         overflow-hidden
         animate-slide-up
-        select-none
       "
     >
       {/* Draggable header */}
@@ -177,6 +176,7 @@ export default function FloatingChat({
           flex items-center justify-between
           cursor-grab active:cursor-grabbing
           shrink-0
+          select-none
         "
         onMouseDown={(e) => handleMouseDown(e, "window")}
       >

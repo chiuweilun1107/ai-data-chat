@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Panel, PlotlyData } from "@/lib/types";
-import { sendChatMessage } from "@/lib/api";
+import { sendChatMessage, createPanel } from "@/lib/api";
 
 interface PanelEditChatProps {
   panel: Panel;
   projectId: string;
-  onUpdate: (panel: Panel) => void;
+  onPanelCreated: (panel: Panel) => void;
   onClose: () => void;
 }
 
@@ -20,7 +20,7 @@ interface EditMessage {
 export default function PanelEditChat({
   panel,
   projectId,
-  onUpdate,
+  onPanelCreated,
   onClose,
 }: PanelEditChatProps) {
   const [messages, setMessages] = useState<EditMessage[]>([]);
@@ -91,7 +91,8 @@ export default function PanelEditChat({
         `現有 SQL：${panel.sql}`,
         `現有繪圖程式碼：${panel.chart_code}`,
         `用戶要求：${userMsg.content}`,
-        `請根據用戶要求修改圖表，保持相同的查詢邏輯除非用戶要求改變。`,
+        `重要：如果用戶的要求與修改圖表無關（例如打招呼、閒聊），請只用文字回覆，不要生成 SQL 或圖表程式碼。`,
+        `如果是有效的圖表修改請求，請根據要求修改圖表，保持相同的查詢邏輯除非用戶要求改變。`,
       ].join("\n");
 
       const response = await sendChatMessage(projectId, {
@@ -99,20 +100,25 @@ export default function PanelEditChat({
         is_edit: true,
       });
 
+      const isChartGenerated = response.chart_json && typeof response.chart_json === "object" && Array.isArray((response.chart_json as PlotlyData).data) && (response.chart_json as PlotlyData).data.length > 0;
+
       const assistantMsg: EditMessage = {
         id: `a-${Date.now()}`,
         role: "assistant",
-        content: response.explanation || "Chart updated.",
+        content: isChartGenerated
+          ? (response.explanation || "New chart created.")
+          : (response.explanation || response.text_response || "I can only help with chart modifications here."),
       };
       setMessages((prev) => [...prev, assistantMsg]);
 
-      if (response.chart_json) {
-        onUpdate({
-          ...panel,
+      if (isChartGenerated) {
+        const newPanel = await createPanel(projectId, {
+          title: panel.title,
           sql: response.sql || panel.sql,
           chart_code: response.chart_code || panel.chart_code,
           chart_json: response.chart_json as PlotlyData,
         });
+        onPanelCreated(newPanel);
       }
     } catch (err) {
       setMessages((prev) => [
@@ -126,7 +132,7 @@ export default function PanelEditChat({
     } finally {
       setSending(false);
     }
-  }, [input, sending, panel, projectId, onUpdate]);
+  }, [input, sending, panel, projectId, onPanelCreated]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.nativeEvent.isComposing || e.keyCode === 229) return;
@@ -152,7 +158,7 @@ export default function PanelEditChat({
           shadow-2xl shadow-black/40
           border border-surface-border
           flex flex-col overflow-hidden
-          animate-slide-up select-none
+          animate-slide-up
         "
       >
         {/* Draggable header */}
@@ -161,6 +167,7 @@ export default function PanelEditChat({
             px-4 py-2.5 border-b border-surface-border
             flex items-center justify-between
             cursor-grab active:cursor-grabbing shrink-0
+            select-none
           "
           onMouseDown={handleMouseDown}
         >

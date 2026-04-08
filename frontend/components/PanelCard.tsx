@@ -88,11 +88,11 @@ export default function PanelCard({
     return {
       ...base,
       template: isDark ? "plotly_dark" : "plotly_white",
-      paper_bgcolor: "transparent",
-      plot_bgcolor: "transparent",
+      paper_bgcolor: fullscreen ? (isDark ? "#1e1e1e" : "#ffffff") : "transparent",
+      plot_bgcolor: fullscreen ? (isDark ? "#1e1e1e" : "#ffffff") : "transparent",
       font: { color: activeFontColor, size: chartSettings.fontSize },
-      title: base.title ? { ...(typeof base.title === "object" ? base.title : { text: base.title }), font: { size: chartSettings.titleSize, color: activeFontColor } } : undefined,
-      margin: { t: 32, r: 16, b: 48, l: 56 },
+      title: "",
+      margin: fullscreen ? { t: 48, r: 32, b: 64, l: 80 } : { t: 32, r: 16, b: 48, l: 56 },
       autosize: true,
       showlegend: chartSettings.showLegend,
       xaxis: {
@@ -108,7 +108,7 @@ export default function PanelCard({
         showgrid: chartSettings.showGrid,
       },
     };
-  }, [panel.chart_json, theme, chartSettings]);
+  }, [panel.chart_json, theme, chartSettings, fullscreen]);
 
   const plotlyData = useMemo(() => {
     return (panel.chart_json?.data || []) as Array<Record<string, unknown>>;
@@ -162,6 +162,23 @@ export default function PanelCard({
     setFullscreen((prev) => !prev);
   }, []);
 
+  // Trigger Plotly resize after fullscreen toggle + ESC key to exit
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 50);
+
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && fullscreen) setFullscreen(false);
+    };
+    if (fullscreen) window.addEventListener("keydown", handleEsc);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [fullscreen]);
+
   const handleEdit = useCallback(() => {
     setMenuOpen(false);
     onEdit?.(panel);
@@ -171,14 +188,14 @@ export default function PanelCard({
     <div
       ref={containerRef}
       className={`
-        bg-surface-card rounded-card relative group
-        ${fullscreen ? "fixed inset-4 z-50 shadow-2xl" : ""}
+        rounded-card group
+        ${fullscreen ? "fixed inset-8 z-50 shadow-2xl bg-white dark:bg-[#1e1e1e]" : "relative bg-surface-card"}
       `}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setMenuOpen(false); setCopyMenuOpen(false); }}
     >
       {fullscreen && (
-        <div className="fixed inset-0 bg-black/60 -z-10" onClick={handleFullscreen} />
+        <div className="fixed inset-0 -z-10" onClick={handleFullscreen} />
       )}
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-1">

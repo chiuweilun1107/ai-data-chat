@@ -4,7 +4,7 @@ Panel CRUD + refresh (re-execute SQL).
 
 from fastapi import APIRouter, HTTPException
 from database import get_db
-from models import PanelCreate, PanelUpdate, PanelResponse, PanelImport
+from models import PanelCreate, PanelUpdate, PanelResponse, PanelImport, PanelReorder
 from core.db import get_connection
 from core.sql_executor import safe_execute
 from core.chart_generator import execute_chart_code, ChartExecutionError
@@ -119,6 +119,36 @@ def list_all_panels():
                 ],
             })
         return result
+
+
+@router.put("/api/projects/{project_id}/panels/reorder")
+def reorder_panels(project_id: int, body: PanelReorder):
+    """Batch reorder panels by updating position_y to match the list index."""
+    with get_db() as conn:
+        _get_project_or_404(conn, project_id)
+
+        # Validate all panel_ids belong to this project
+        placeholders = ",".join("?" for _ in body.panel_ids)
+        rows = conn.execute(
+            f"SELECT id FROM panels WHERE id IN ({placeholders}) AND project_id = ?",
+            (*body.panel_ids, project_id),
+        ).fetchall()
+        found_ids = {r["id"] for r in rows}
+        missing = [pid for pid in body.panel_ids if pid not in found_ids]
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Panel IDs {missing} do not belong to project {project_id}",
+            )
+
+        # Update positions in a single transaction (get_db context manager handles commit)
+        for index, panel_id in enumerate(body.panel_ids):
+            conn.execute(
+                "UPDATE panels SET position_x = 0, position_y = ? WHERE id = ?",
+                (index, panel_id),
+            )
+
+    return {"ok": True}
 
 
 @router.put("/api/panels/{panel_id}", response_model=PanelResponse)

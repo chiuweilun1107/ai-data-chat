@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Panel } from "@/lib/types";
-import { fetchPanels, deletePanel as apiDeletePanel } from "@/lib/api";
+import { fetchPanels, deletePanel as apiDeletePanel, reorderPanels as apiReorderPanels } from "@/lib/api";
 
 interface UsePanelsReturn {
   panels: Panel[];
@@ -11,6 +11,7 @@ interface UsePanelsReturn {
   addPanel: (panel: Panel) => void;
   updatePanel: (panel: Panel) => void;
   removePanel: (panelId: string) => Promise<void>;
+  reorder: (panelIds: string[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -57,6 +58,21 @@ export function usePanels(projectId: string | null): UsePanelsReturn {
     setPanels((prev) => prev.filter((p) => p.id !== panelId));
   }, []);
 
+  const reorder = useCallback(async (panelIds: string[]) => {
+    if (!projectId) return;
+    // Optimistic update
+    setPanels((prev) => {
+      const map = new Map(prev.map((p) => [p.id, p]));
+      return panelIds.map((id) => map.get(id)).filter(Boolean) as Panel[];
+    });
+    try {
+      await apiReorderPanels(projectId, panelIds);
+    } catch {
+      // Revert on failure
+      await loadPanels();
+    }
+  }, [projectId, loadPanels]);
+
   const refresh = useCallback(async () => {
     await loadPanels();
   }, [loadPanels]);
@@ -68,6 +84,7 @@ export function usePanels(projectId: string | null): UsePanelsReturn {
     addPanel,
     updatePanel,
     removePanel,
+    reorder,
     refresh,
   };
 }

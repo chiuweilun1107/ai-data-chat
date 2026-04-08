@@ -30,6 +30,7 @@ export default function Home() {
     addPanel,
     updatePanel,
     removePanel,
+    reorder: reorderPanels,
     refresh: refreshPanels,
   } = usePanels(activeProject?.id ?? null);
 
@@ -127,6 +128,7 @@ export default function Home() {
           onRefreshAll={handleRefreshAll}
           onEditPanel={(panel: Panel) => setEditingPanel(panel)}
           onSaveAsTemplate={(panel: Panel) => setSavingTemplate(panel)}
+          onReorderPanels={reorderPanels}
           onImportPanels={() => setImportModalOpen(true)}
           onCopiedToProject={() => {
             // No-op: the copy goes to another project, no need to refresh current
@@ -148,8 +150,8 @@ export default function Home() {
         <PanelEditChat
           panel={editingPanel}
           projectId={String(activeProject.id)}
-          onUpdate={(updated) => {
-            updatePanel(updated);
+          onPanelCreated={(newPanel) => {
+            addPanel(newPanel);
             setEditingPanel(null);
           }}
           onClose={() => setEditingPanel(null)}
