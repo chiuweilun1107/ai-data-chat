@@ -74,6 +74,7 @@ export interface ChatRequest {
   message: string;
   template_id?: string;
   is_edit?: boolean;
+  panel_id?: string;
 }
 
 export interface ChatResponse {

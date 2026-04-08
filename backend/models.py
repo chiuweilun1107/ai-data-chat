@@ -96,6 +96,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
     template_id: int | None = None
     is_edit: bool = False
+    panel_id: int | None = None
 
 
 class ChatMessageResponse(BaseModel):

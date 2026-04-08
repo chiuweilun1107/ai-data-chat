@@ -236,10 +236,9 @@ export async function sendChatMessage(
     chartJson = raw.chart_json as PlotlyData;
   }
 
-  // Auto-create panel if chart was generated
+  // Auto-create panel if chart was generated (skip for edit mode — PanelEditChat handles its own creation)
   let panelId = "";
-  console.log("[sendChatMessage] chartJson:", !!chartJson, "sql:", !!raw.sql, "chart_json type:", typeof raw.chart_json, "chart_json len:", typeof raw.chart_json === "string" ? (raw.chart_json as string).length : 0);
-  if (chartJson && raw.sql) {
+  if (chartJson && raw.sql && !payload.is_edit) {
     try {
       const panel = await createPanel(projectId, {
         title: (raw.explanation as string || payload.message).slice(0, 60),
@@ -297,6 +296,34 @@ export async function fetchChatHistory(
       chart_code: (item.chart_code as string) || undefined,
       chart_json: chartJson,
       created_at: item.created_at as string,
+    } as ChatMessage;
+  });
+}
+
+export async function fetchPanelChatHistory(
+  panelId: string
+): Promise<ChatMessage[]> {
+  const raw = await request<Record<string, unknown>[]>(`/api/panels/${panelId}/chat/history`);
+  return raw.map((item) => {
+    let chartJson: PlotlyData | undefined;
+    if (item.chart_json && typeof item.chart_json === "string") {
+      try {
+        const parsed = JSON.parse(item.chart_json as string);
+        if (parsed && typeof parsed === "object" && parsed.data) {
+          chartJson = parsed;
+        }
+      } catch { /* ignore */ }
+    } else if (item.chart_json && typeof item.chart_json === "object") {
+      chartJson = item.chart_json as PlotlyData;
+    }
+    return {
+      id: String(item.id),
+      role: item.role as "user" | "assistant",
+      content: (item.content as string) || "",
+      sql: (item.sql as string) || undefined,
+      chart_code: (item.chart_code as string) || undefined,
+      chart_json: chartJson,
+      created_at: (item.created_at as string) || "",
     } as ChatMessage;
   });
 }

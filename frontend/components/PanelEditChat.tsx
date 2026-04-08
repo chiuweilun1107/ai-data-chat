@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Panel, PlotlyData } from "@/lib/types";
-import { sendChatMessage, createPanel } from "@/lib/api";
+import { sendChatMessage, createPanel, fetchPanelChatHistory } from "@/lib/api";
 
 interface PanelEditChatProps {
   panel: Panel;
@@ -31,6 +31,24 @@ export default function PanelEditChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  // Load panel chat history
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const history = await fetchPanelChatHistory(panel.id);
+        if (!cancelled) {
+          setMessages(history.map(m => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+          })));
+        }
+      } catch { /* empty is fine */ }
+    })();
+    return () => { cancelled = true; };
+  }, [panel.id]);
 
   // Initialize position
   useEffect(() => {
@@ -87,17 +105,21 @@ export default function PanelEditChat({
 
     try {
       const contextMessage = [
-        `[修改現有圖表] 面板標題：${panel.title}`,
+        `[圖表編輯模式] 面板標題：${panel.title}`,
         `現有 SQL：${panel.sql}`,
         `現有繪圖程式碼：${panel.chart_code}`,
-        `用戶要求：${userMsg.content}`,
-        `重要：如果用戶的要求與修改圖表無關（例如打招呼、閒聊），請只用文字回覆，不要生成 SQL 或圖表程式碼。`,
-        `如果是有效的圖表修改請求，請根據要求修改圖表，保持相同的查詢邏輯除非用戶要求改變。`,
+        `用戶輸入：${userMsg.content}`,
+        ``,
+        `## 回應規則（必須遵守）`,
+        `1. 只有當用戶明確要求「修改、變更、調整」圖表樣式或資料時，才使用 generate_analysis 工具生成新的 SQL 和圖表程式碼`,
+        `2. 如果用戶是在「提問、詢問原因、聊天、打招呼」，請只用純文字回答，絕對不要呼叫 generate_analysis 工具`,
+        `3. 判斷標準：用戶的意圖是「改圖」還是「問問題」？問問題 → 純文字回答`,
       ].join("\n");
 
       const response = await sendChatMessage(projectId, {
         message: contextMessage,
         is_edit: true,
+        panel_id: panel.id,
       });
 
       const isChartGenerated = response.chart_json && typeof response.chart_json === "object" && Array.isArray((response.chart_json as PlotlyData).data) && (response.chart_json as PlotlyData).data.length > 0;

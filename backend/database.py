@@ -102,3 +102,9 @@ def init_db():
         tmpl_cols = [row[1] for row in conn.execute("PRAGMA table_info(templates)").fetchall()]
         if "sample_sql" not in tmpl_cols:
             conn.execute("ALTER TABLE templates ADD COLUMN sample_sql TEXT NOT NULL DEFAULT ''")
+
+        # Migrate: add panel_id column to chat_messages if not exists
+        chat_cols = [row[1] for row in conn.execute("PRAGMA table_info(chat_messages)").fetchall()]
+        if "panel_id" not in chat_cols:
+            conn.execute("ALTER TABLE chat_messages ADD COLUMN panel_id INTEGER DEFAULT NULL")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_panel ON chat_messages(panel_id)")
